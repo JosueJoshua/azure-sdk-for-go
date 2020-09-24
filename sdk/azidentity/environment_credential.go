@@ -39,7 +39,7 @@ func NewEnvironmentCredential(options *TokenCredentialOptions) (azcore.Credentia
 			return NewUsernamePasswordCredential(tenantID, clientID, username, password, options)
 		}
 	}
-	err := &CredentialUnavailableError{CredentialType: "Environment Credential", Message: "Missing environment variable AZURE_CLIENT_SECRET or AZURE_CLIENT_CERTIFICATE_PATH or AZURE_USERNAME and AZURE_PASSWORD"}
+	err := &CredentialUnavailableError{CredentialType: "Environment Credential", Message: "Missing environment variable AZURE_CLIENT_SECRET or AZURE_CLIENT_CERTIFICATE_PATH or include both AZURE_USERNAME and AZURE_PASSWORD"}
 	logCredentialError(err.CredentialType, err)
 	return nil, err
 }
