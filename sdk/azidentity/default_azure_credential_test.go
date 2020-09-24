@@ -22,8 +22,8 @@ func TestDefaultAzureCredential_ExcludeEnvCredential(t *testing.T) {
 		t.Fatalf("Did not expect to receive an error in creating the credential")
 	}
 
-	if len(cred.sources) != lengthOfChainOneExcluded {
-		t.Fatalf("Length of ChainedTokenCredential sources for DefaultAzureCredential. Expected: %d, Received: %d", lengthOfChainOneExcluded, len(cred.sources))
+	if len(cred.(*chainedTokenCredential).sources) != lengthOfChainOneExcluded {
+		t.Fatalf("Length of ChainedTokenCredential sources for DefaultAzureCredential. Expected: %d, Received: %d", lengthOfChainOneExcluded, len(cred.(*chainedTokenCredential).sources))
 	}
 	_ = os.Setenv("MSI_ENDPOINT", "")
 }
@@ -37,8 +37,8 @@ func TestDefaultAzureCredential_ExcludeMSICredential(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Did not expect to receive an error in creating the credential")
 	}
-	if len(cred.sources) != lengthOfChainOneExcluded {
-		t.Fatalf("Length of ChainedTokenCredential sources for DefaultAzureCredential. Expected: %d, Received: %d", lengthOfChainOneExcluded, len(cred.sources))
+	if len(cred.(*chainedTokenCredential).sources) != lengthOfChainOneExcluded {
+		t.Fatalf("Length of ChainedTokenCredential sources for DefaultAzureCredential. Expected: %d, Received: %d", lengthOfChainOneExcluded, len(cred.(*chainedTokenCredential).sources))
 	}
 }
 
@@ -53,8 +53,8 @@ func TestDefaultAzureCredential_ExcludeAzureCLICredential(t *testing.T) {
 		t.Fatalf("Did not expect to receive an error in creating the credential")
 	}
 
-	if len(cred.sources) != lengthOfChainOneExcluded {
-		t.Fatalf("Length of ChainedTokenCredential sources for DefaultAzureCredential. Expected: %d, Received: %d", lengthOfChainOneExcluded, len(cred.sources))
+	if len(cred.(*chainedTokenCredential).sources) != lengthOfChainOneExcluded {
+		t.Fatalf("Length of ChainedTokenCredential sources for DefaultAzureCredential. Expected: %d, Received: %d", lengthOfChainOneExcluded, len(cred.(*chainedTokenCredential).sources))
 	}
 	clearEnvVars("MSI_ENDPOINT")
 	resetEnvironmentVarsForTest()
@@ -90,13 +90,13 @@ func TestDefaultAzureCredential_NilOptions(t *testing.T) {
 	c := newManagedIdentityClient(nil)
 	// if the test is running in a MSI environment then the length of sources would be two since it will include environment credential and managed identity credential
 	if msiType, err := c.getMSIType(); !(msiType == msiTypeUnavailable || msiType == msiTypeUnknown) {
-		if len(cred.sources) != lengthOfChainFull {
-			t.Fatalf("Length of ChainedTokenCredential sources for DefaultAzureCredential. Expected: %d, Received: %d", lengthOfChainFull, len(cred.sources))
+		if len(cred.(*chainedTokenCredential).sources) != lengthOfChainFull {
+			t.Fatalf("Length of ChainedTokenCredential sources for DefaultAzureCredential. Expected: %d, Received: %d", lengthOfChainFull, len(cred.(*chainedTokenCredential).sources))
 		}
 		//if a credential unavailable error is received or msiType is unknown then only the environment credential will be added
 	} else if unavailableErr := (*CredentialUnavailableError)(nil); errors.As(err, &unavailableErr) || msiType == msiTypeUnknown {
-		if len(cred.sources) != lengthOfChainOneExcluded {
-			t.Fatalf("Length of ChainedTokenCredential sources for DefaultAzureCredential. Expected: %d, Received: %d", lengthOfChainOneExcluded, len(cred.sources))
+		if len(cred.(*chainedTokenCredential).sources) != lengthOfChainOneExcluded {
+			t.Fatalf("Length of ChainedTokenCredential sources for DefaultAzureCredential. Expected: %d, Received: %d", lengthOfChainOneExcluded, len(cred.(*chainedTokenCredential).sources))
 		}
 		// if there is some other unexpected error then we fail here
 	} else if err != nil {

@@ -15,9 +15,9 @@ const (
 	deviceCodeGrantType = "urn:ietf:params:oauth:grant-type:device_code"
 )
 
-// DeviceCodeCredential authenticates a user using the device code flow, and provides access tokens for that user account.
+// deviceCodeCredential authenticates a user using the device code flow, and provides access tokens for that user account.
 // For more information on the device code authentication flow see: https://docs.microsoft.com/en-us/azure/active-directory/develop/v2-oauth2-device-code.
-type DeviceCodeCredential struct {
+type deviceCodeCredential struct {
 	client       *aadIdentityClient
 	tenantID     string       // Gets the Azure Active Directory tenant (directory) ID of the service principal
 	clientID     string       // Gets the client (application) ID of the service principal
@@ -25,17 +25,17 @@ type DeviceCodeCredential struct {
 	refreshToken string       // Gets the refresh token sent from the service and will be used to retreive new access tokens after the initial request for a token. Thread safety for updates is handled in the AuthenticationPolicy since only one goroutine will be updating at a time
 }
 
-// NewDeviceCodeCredential constructs a new DeviceCodeCredential used to authenticate against Azure Active Directory with a device code.
+// NewDeviceCodeCredential constructs a credential used to authenticate against Azure Active Directory with a device code.
 // tenantID: The Azure Active Directory tenant (directory) ID of the service principal. If none is set then the default value ("organizations") will be used in place of the tenantID.
 // clientID: The client (application) ID of the service principal.
 // callback: The callback function used to send the login message back to the user
 // options: Options used to configure the management of the requests sent to Azure Active Directory.
-func NewDeviceCodeCredential(tenantID string, clientID string, callback func(string), options *TokenCredentialOptions) (*DeviceCodeCredential, error) {
+func NewDeviceCodeCredential(tenantID string, clientID string, callback func(string), options *TokenCredentialOptions) (azcore.Credential, error) {
 	c, err := newAADIdentityClient(options)
 	if err != nil {
 		return nil, err
 	}
-	return &DeviceCodeCredential{tenantID: tenantID, clientID: clientID, callback: callback, client: c}, nil
+	return &deviceCodeCredential{tenantID: tenantID, clientID: clientID, callback: callback, client: c}, nil
 }
 
 // GetToken obtains a token from Azure Active Directory, following the device code authentication
@@ -44,7 +44,7 @@ func NewDeviceCodeCredential(tenantID string, clientID string, callback func(str
 // scopes: The list of scopes for which the token will have access. The "offline_access" scope is checked for and automatically added in case it isn't present to allow for silent token refresh.
 // ctx: The context for controlling the request lifetime.
 // Returns an AccessToken which can be used to authenticate service client calls.
-func (c *DeviceCodeCredential) GetToken(ctx context.Context, opts azcore.TokenRequestOptions) (*azcore.AccessToken, error) {
+func (c *deviceCodeCredential) GetToken(ctx context.Context, opts azcore.TokenRequestOptions) (*azcore.AccessToken, error) {
 	for i, scope := range opts.Scopes {
 		if scope == "offline_access" { // if we find that the opts.Scopes slice contains "offline_access" then we don't need to do anything and exit
 			break
@@ -97,7 +97,7 @@ func (c *DeviceCodeCredential) GetToken(ctx context.Context, opts azcore.TokenRe
 }
 
 // AuthenticationPolicy implements the azcore.Credential interface on ClientSecretCredential.
-func (c *DeviceCodeCredential) AuthenticationPolicy(options azcore.AuthenticationPolicyOptions) azcore.Policy {
+func (c *deviceCodeCredential) AuthenticationPolicy(options azcore.AuthenticationPolicyOptions) azcore.Policy {
 	return newBearerTokenPolicy(c, options)
 }
 

@@ -24,13 +24,13 @@ type DefaultAzureCredentialOptions struct {
 	ExcludeMSICredential bool
 }
 
-// NewDefaultAzureCredential provides a default ChainedTokenCredential configuration for applications that will be deployed to Azure.  The following credential
-// types will be tried, in the following order:
-// - EnvironmentCredential
-// - ManagedIdentityCredential
-// - AzureCLICredential
+// NewDefaultAzureCredential provides a default TokenCredential chain configuration for applications that will be deployed to Azure.  Credentials that can authenticate
+// for the following cases will be tried, in the following order:
+// - Environment Credential
+// - Managed Identity Credential
+// - Azure CLI Credential
 // Consult the documentation for these credential types for more information on how they attempt authentication.
-func NewDefaultAzureCredential(options *DefaultAzureCredentialOptions) (*ChainedTokenCredential, error) {
+func NewDefaultAzureCredential(options *DefaultAzureCredentialOptions) (azcore.Credential, error) {
 	var creds []azcore.TokenCredential
 	errMsg := ""
 
@@ -41,7 +41,8 @@ func NewDefaultAzureCredential(options *DefaultAzureCredentialOptions) (*Chained
 	if !options.ExcludeEnvironmentCredential {
 		envCred, err := NewEnvironmentCredential(nil)
 		if err == nil {
-			creds = append(creds, envCred)
+			// we know NewEnvironmentCredential will return a credential that implements the azcore.TokenCredential interface
+			creds = append(creds, envCred.(azcore.TokenCredential))
 		} else {
 			errMsg += err.Error()
 		}
@@ -50,7 +51,8 @@ func NewDefaultAzureCredential(options *DefaultAzureCredentialOptions) (*Chained
 	if !options.ExcludeMSICredential {
 		msiCred, err := NewManagedIdentityCredential("", nil)
 		if err == nil {
-			creds = append(creds, msiCred)
+			// we know managedIdentityCredential implements the azcore.TokenCredential interface
+			creds = append(creds, msiCred.(azcore.TokenCredential))
 		} else {
 			errMsg += err.Error()
 		}
@@ -59,7 +61,8 @@ func NewDefaultAzureCredential(options *DefaultAzureCredentialOptions) (*Chained
 	if !options.ExcludeAzureCLICredential {
 		cliCred, err := NewAzureCLICredential(nil)
 		if err == nil {
-			creds = append(creds, cliCred)
+			// we know AzureCLICredential implements the azcore.TokenCredential interface
+			creds = append(creds, cliCred.(azcore.TokenCredential))
 		} else {
 			errMsg += err.Error()
 		}

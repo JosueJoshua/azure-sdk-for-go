@@ -17,23 +17,23 @@ import (
 	"golang.org/x/crypto/pkcs12"
 )
 
-// ClientCertificateCredential enables authentication of a service principal to Azure Active Directory using a certificate that is assigned to its App Registration. More information
+// clientCertificateCredential enables authentication of a service principal to Azure Active Directory using a certificate that is assigned to its App Registration. More information
 // on how to configure certificate authentication can be found here:
 // https://docs.microsoft.com/en-us/azure/active-directory/develop/active-directory-certificate-credentials#register-your-certificate-with-azure-ad
-type ClientCertificateCredential struct {
+type clientCertificateCredential struct {
 	client   *aadIdentityClient
 	tenantID string        // The Azure Active Directory tenant (directory) ID of the service principal
 	clientID string        // The client (application) ID of the service principal
 	cert     *certContents // The contents of the certificate file
 }
 
-// NewClientCertificateCredential creates an instance of ClientCertificateCredential with the details needed to authenticate against Azure Active Directory with the specified certificate.
+// NewClientCertificateCredential creates a credential with the details needed to authenticate against Azure Active Directory with the specified certificate.
 // tenantID: The Azure Active Directory tenant (directory) ID of the service principal.
 // clientID: The client (application) ID of the service principal.
 // clientCertificate: The path to the client certificate used to authenticate the client.  Supported formats are PEM and PFX.
 // password: The password required to decrypt the private key.  Pass nil if there is no password.
 // options: configure the management of the requests sent to Azure Active Directory.
-func NewClientCertificateCredential(tenantID string, clientID string, clientCertificate string, password *string, options *TokenCredentialOptions) (*ClientCertificateCredential, error) {
+func NewClientCertificateCredential(tenantID string, clientID string, clientCertificate string, password *string, options *TokenCredentialOptions) (azcore.Credential, error) {
 	_, err := os.Stat(clientCertificate)
 	if err != nil {
 		credErr := &CredentialUnavailableError{CredentialType: "Client Certificate Credential", Message: "Certificate file not found in path: " + clientCertificate}
@@ -64,7 +64,7 @@ func NewClientCertificateCredential(tenantID string, clientID string, clientCert
 	if err != nil {
 		return nil, err
 	}
-	return &ClientCertificateCredential{tenantID: tenantID, clientID: clientID, cert: cert, client: c}, nil
+	return &clientCertificateCredential{tenantID: tenantID, clientID: clientID, cert: cert, client: c}, nil
 }
 
 // contains decoded cert contents we care about
@@ -168,7 +168,7 @@ func extractFromPFXFile(certData []byte, password *string) (*certContents, error
 // scopes: The list of scopes for which the token will have access.
 // ctx: controlling the request lifetime.
 // Returns an AccessToken which can be used to authenticate service client calls.
-func (c *ClientCertificateCredential) GetToken(ctx context.Context, opts azcore.TokenRequestOptions) (*azcore.AccessToken, error) {
+func (c *clientCertificateCredential) GetToken(ctx context.Context, opts azcore.TokenRequestOptions) (*azcore.AccessToken, error) {
 	tk, err := c.client.authenticateCertificate(ctx, c.tenantID, c.clientID, c.cert, opts.Scopes)
 	if err != nil {
 		addGetTokenFailureLogs("Client Certificate Credential", err, true)
@@ -179,6 +179,6 @@ func (c *ClientCertificateCredential) GetToken(ctx context.Context, opts azcore.
 }
 
 // AuthenticationPolicy implements the azcore.Credential interface on ClientSecretCredential.
-func (c *ClientCertificateCredential) AuthenticationPolicy(options azcore.AuthenticationPolicyOptions) azcore.Policy {
+func (c *clientCertificateCredential) AuthenticationPolicy(options azcore.AuthenticationPolicyOptions) azcore.Policy {
 	return newBearerTokenPolicy(c, options)
 }

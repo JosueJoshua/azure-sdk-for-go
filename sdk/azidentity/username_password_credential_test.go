@@ -15,10 +15,11 @@ import (
 )
 
 func TestUsernamePasswordCredential_CreateAuthRequestSuccess(t *testing.T) {
-	cred, err := NewUsernamePasswordCredential(tenantID, clientID, "username", "password", nil)
+	credInt, err := NewUsernamePasswordCredential(tenantID, clientID, "username", "password", nil)
 	if err != nil {
 		t.Fatalf("Unable to create credential. Received: %v", err)
 	}
+	cred := credInt.(*usernamePasswordCredential)
 	req, err := cred.client.createUsernamePasswordAuthRequest(context.Background(), cred.tenantID, cred.clientID, cred.username, cred.password, []string{scope})
 	if err != nil {
 		t.Fatalf("Unexpectedly received an error: %v", err)
@@ -69,7 +70,7 @@ func TestUsernamePasswordCredential_GetTokenSuccess(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unable to create credential. Received: %v", err)
 	}
-	_, err = cred.GetToken(context.Background(), azcore.TokenRequestOptions{Scopes: []string{scope}})
+	_, err = cred.(*usernamePasswordCredential).GetToken(context.Background(), azcore.TokenRequestOptions{Scopes: []string{scope}})
 	if err != nil {
 		t.Fatalf("Expected an empty error but received: %s", err.Error())
 	}
@@ -83,7 +84,7 @@ func TestUsernamePasswordCredential_GetTokenInvalidCredentials(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unable to create credential. Received: %v", err)
 	}
-	_, err = cred.GetToken(context.Background(), azcore.TokenRequestOptions{Scopes: []string{scope}})
+	_, err = cred.(*usernamePasswordCredential).GetToken(context.Background(), azcore.TokenRequestOptions{Scopes: []string{scope}})
 	if err == nil {
 		t.Fatalf("Expected an error but did not receive one.")
 	}

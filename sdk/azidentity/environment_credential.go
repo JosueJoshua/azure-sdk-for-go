@@ -4,30 +4,15 @@
 package azidentity
 
 import (
-	"context"
 	"os"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 )
 
-// EnvironmentCredential enables authentication to Azure Active Directory using either ClientSecretCredential, ClientCertificateCredential or UsernamePasswordCredential.
-// This credential type will check for the following environment variables in the same order as listed:
-// - AZURE_TENANT_ID
-// - AZURE_CLIENT_ID
-// - AZURE_CLIENT_SECRET
-// - AZURE_CLIENT_CERTIFICATE_PATH
-// - AZURE_USERNAME
-// - AZURE_PASSWORD
-// NOTE: EnvironmentCredential will stop checking environment variables as soon as it finds enough environment variables to
-// create a credential type.
-type EnvironmentCredential struct {
-	cred azcore.TokenCredential
-}
-
-// NewEnvironmentCredential creates an instance that implements the azcore.TokenCredential interface and reads credential details from environment variables.
+// NewEnvironmentCredential reads credential details from environment variables and returns a credential that implements the azcore.Credential interface.
 // If the expected environment variables are not found at this time, then a CredentialUnavailableError will be returned.
 // options: The options used to configure the management of the requests sent to Azure Active Directory.
-func NewEnvironmentCredential(options *TokenCredentialOptions) (azcore.TokenCredential, error) {
+func NewEnvironmentCredential(options *TokenCredentialOptions) (azcore.Credential, error) {
 	tenantID := os.Getenv("AZURE_TENANT_ID")
 	if tenantID == "" {
 		err := &CredentialUnavailableError{CredentialType: "Environment Credential", Message: "Missing environment variable AZURE_TENANT_ID"}
@@ -58,19 +43,3 @@ func NewEnvironmentCredential(options *TokenCredentialOptions) (azcore.TokenCred
 	logCredentialError(err.CredentialType, err)
 	return nil, err
 }
-
-// GetToken obtains a token from Azure Active Directory, using the underlying credential's GetToken method.
-// ctx: Context used to control the request lifetime.
-// opts: TokenRequestOptions contains the list of scopes for which the token will have access.
-// Returns an AccessToken which can be used to authenticate service client calls.
-func (c *EnvironmentCredential) GetToken(ctx context.Context, opts azcore.TokenRequestOptions) (*azcore.AccessToken, error) {
-	return c.cred.GetToken(ctx, opts)
-}
-
-// AuthenticationPolicy implements the azcore.Credential interface on EnvironmentCredential and calls the Bearer Token policy
-// to get the bearer token.
-func (c *EnvironmentCredential) AuthenticationPolicy(options azcore.AuthenticationPolicyOptions) azcore.Policy {
-	return newBearerTokenPolicy(c.cred, options)
-}
-
-var _ azcore.TokenCredential = (*EnvironmentCredential)(nil)

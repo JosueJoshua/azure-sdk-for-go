@@ -34,7 +34,7 @@ func TestManagedIdentityCredential_GetTokenInCloudShellLive(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	_, err = msiCred.GetToken(context.Background(), azcore.TokenRequestOptions{Scopes: []string{msiScope}})
+	_, err = msiCred.(*managedIdentityCredential).GetToken(context.Background(), azcore.TokenRequestOptions{Scopes: []string{msiScope}})
 	if err != nil {
 		t.Fatalf("Received an error when attempting to retrieve a token")
 	}
@@ -51,7 +51,7 @@ func TestManagedIdentityCredential_GetTokenInCloudShellMock(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	_, err = msiCred.GetToken(context.Background(), azcore.TokenRequestOptions{Scopes: []string{msiScope}})
+	_, err = msiCred.(*managedIdentityCredential).GetToken(context.Background(), azcore.TokenRequestOptions{Scopes: []string{msiScope}})
 	if err != nil {
 		t.Fatalf("Received an error when attempting to retrieve a token")
 	}
@@ -68,7 +68,7 @@ func TestManagedIdentityCredential_GetTokenInCloudShellMockFail(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	_, err = msiCred.GetToken(context.Background(), azcore.TokenRequestOptions{Scopes: []string{msiScope}})
+	_, err = msiCred.(*managedIdentityCredential).GetToken(context.Background(), azcore.TokenRequestOptions{Scopes: []string{msiScope}})
 	if err == nil {
 		t.Fatalf("Expected an error but did not receive one")
 	}
@@ -82,10 +82,11 @@ func TestManagedIdentityCredential_GetTokenInAppServiceV20170901Mock(t *testing.
 	_ = os.Setenv("MSI_ENDPOINT", srv.URL())
 	_ = os.Setenv("MSI_SECRET", "secret")
 	defer clearEnvVars("MSI_ENDPOINT", "MSI_SECRET")
-	msiCred, err := NewManagedIdentityCredential(clientID, &ManagedIdentityCredentialOptions{HTTPClient: srv})
+	msiCredInt, err := NewManagedIdentityCredential(clientID, &ManagedIdentityCredentialOptions{HTTPClient: srv})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
+	msiCred := msiCredInt.(*managedIdentityCredential)
 	tk, err := msiCred.GetToken(context.Background(), azcore.TokenRequestOptions{Scopes: []string{msiScope}})
 	if err != nil {
 		t.Fatalf("Received an error when attempting to retrieve a token")
@@ -106,10 +107,11 @@ func TestManagedIdentityCredential_GetTokenInAppServiceV20190801Mock(t *testing.
 	_ = os.Setenv("IDENTITY_ENDPOINT", srv.URL())
 	_ = os.Setenv("IDENTITY_HEADER", "header")
 	defer clearEnvVars("IDENTITY_ENDPOINT", "IDENTITY_HEADER")
-	msiCred, err := NewManagedIdentityCredential("", &ManagedIdentityCredentialOptions{HTTPClient: srv})
+	msiCredInt, err := NewManagedIdentityCredential("", &ManagedIdentityCredentialOptions{HTTPClient: srv})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
+	msiCred := msiCredInt.(*managedIdentityCredential)
 	tk, err := msiCred.GetToken(context.Background(), azcore.TokenRequestOptions{Scopes: []string{msiScope}})
 	if err != nil {
 		t.Fatalf("Received an error when attempting to retrieve a token")
@@ -128,10 +130,11 @@ func TestManagedIdentityCredential_CreateAppServiceAuthRequestV20170901(t *testi
 	_ = os.Setenv("IDENTITY_ENDPOINT", "somevalue")
 	_ = os.Setenv("IDENTITY_HEADER", "header")
 	defer clearEnvVars("IDENTITY_ENDPOINT", "IDENTITY_HEADER")
-	cred, err := NewManagedIdentityCredential(clientID, nil)
+	credInt, err := NewManagedIdentityCredential(clientID, nil)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
+	cred := credInt.(*managedIdentityCredential)
 	cred.client.endpoint = imdsEndpoint
 	req, err := cred.client.createAuthRequest(context.Background(), "", []string{msiScope})
 	if err != nil {
@@ -158,10 +161,11 @@ func TestManagedIdentityCredential_CreateAppServiceAuthRequestV20190801(t *testi
 	_ = os.Setenv("MSI_ENDPOINT", "somevalue")
 	_ = os.Setenv("MSI_SECRET", "secret")
 	defer clearEnvVars("MSI_ENDPOINT", "MSI_SECRET")
-	cred, err := NewManagedIdentityCredential(clientID, nil)
+	credInt, err := NewManagedIdentityCredential(clientID, nil)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
+	cred := credInt.(*managedIdentityCredential)
 	cred.client.endpoint = imdsEndpoint
 	req, err := cred.client.createAuthRequest(context.Background(), "", []string{msiScope})
 	if err != nil {
@@ -194,7 +198,7 @@ func TestManagedIdentityCredential_CreateAccessTokenExpiresOnInt(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	_, err = msiCred.GetToken(context.Background(), azcore.TokenRequestOptions{Scopes: []string{msiScope}})
+	_, err = msiCred.(*managedIdentityCredential).GetToken(context.Background(), azcore.TokenRequestOptions{Scopes: []string{msiScope}})
 	if err != nil {
 		t.Fatalf("Received an error when attempting to retrieve a token")
 	}
@@ -212,7 +216,7 @@ func TestManagedIdentityCredential_GetTokenInAppServiceMockFail(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	_, err = msiCred.GetToken(context.Background(), azcore.TokenRequestOptions{Scopes: []string{msiScope}})
+	_, err = msiCred.(*managedIdentityCredential).GetToken(context.Background(), azcore.TokenRequestOptions{Scopes: []string{msiScope}})
 	if err == nil {
 		t.Fatalf("Expected an error but did not receive one")
 	}
@@ -256,7 +260,7 @@ func TestManagedIdentityCredential_NewManagedIdentityCredentialFail(t *testing.T
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, err = cred.GetToken(context.Background(), azcore.TokenRequestOptions{})
+	_, err = cred.(*managedIdentityCredential).GetToken(context.Background(), azcore.TokenRequestOptions{})
 	if err == nil {
 		t.Fatalf("Expected an error but did not receive one")
 	}
@@ -301,7 +305,7 @@ func TestManagedIdentityCredential_GetTokenUnexpectedJSON(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	_, err = msiCred.GetToken(context.Background(), azcore.TokenRequestOptions{Scopes: []string{msiScope}})
+	_, err = msiCred.(*managedIdentityCredential).GetToken(context.Background(), azcore.TokenRequestOptions{Scopes: []string{msiScope}})
 	if err == nil {
 		t.Fatalf("Expected a JSON marshal error but received nil")
 	}
@@ -312,10 +316,11 @@ func TestManagedIdentityCredential_CreateIMDSAuthRequest(t *testing.T) {
 	// to test IMDS authentication request creation.
 	_ = os.Setenv("MSI_ENDPOINT", "somevalue")
 	defer clearEnvVars("MSI_ENDPOINT")
-	cred, err := NewManagedIdentityCredential(clientID, nil)
+	credInt, err := NewManagedIdentityCredential(clientID, nil)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
+	cred := credInt.(*managedIdentityCredential)
 	cred.client.endpoint = imdsEndpoint
 	req, err := cred.client.createIMDSAuthRequest(context.Background(), []string{msiScope})
 	if err != nil {
@@ -357,7 +362,7 @@ func TestManagedIdentityCredential_GetTokenEnvVar(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	at, err := msiCred.GetToken(context.Background(), azcore.TokenRequestOptions{Scopes: []string{msiScope}})
+	at, err := msiCred.(*managedIdentityCredential).GetToken(context.Background(), azcore.TokenRequestOptions{Scopes: []string{msiScope}})
 	if err != nil {
 		t.Fatalf("Received an error when attempting to retrieve a token")
 	}

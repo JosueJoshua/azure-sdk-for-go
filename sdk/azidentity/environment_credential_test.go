@@ -107,7 +107,7 @@ func TestEnvironmentCredential_ClientSecretSet(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Did not expect an error. Received: %v", err)
 	}
-	if _, ok := cred.(*ClientSecretCredential); !ok {
+	if _, ok := cred.(*clientSecretCredential); !ok {
 		t.Fatalf("Did not receive the right credential type. Expected *azidentity.ClientSecretCredential, Received: %t", cred)
 	}
 }
@@ -130,8 +130,8 @@ func TestEnvironmentCredential_ClientCertificatePathSet(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Did not expect an error. Received: %v", err)
 	}
-	if _, ok := cred.(*ClientCertificateCredential); !ok {
-		t.Fatalf("Did not receive the right credential type. Expected *azidentity.ClientCertificateCredential, Received: %t", cred)
+	if _, ok := cred.(*clientCertificateCredential); !ok {
+		t.Fatalf("Did not receive the right credential type. Expected *azidentity.clientCertificateCredential, Received: %t", cred)
 	}
 }
 
@@ -181,7 +181,7 @@ func TestEnvironmentCredential_UsernamePasswordSet(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Did not expect an error. Received: %v", err)
 	}
-	if _, ok := cred.(*UsernamePasswordCredential); !ok {
+	if _, ok := cred.(*usernamePasswordCredential); !ok {
 		t.Fatalf("Did not receive the right credential type. Expected *azidentity.UsernamePasswordCredential, Received: %t", cred)
 	}
 }

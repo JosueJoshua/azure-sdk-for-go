@@ -130,12 +130,12 @@ func (c *managedIdentityClient) createAccessToken(res *azcore.Response) (*azcore
 	}
 	// this is the case when expires_on is a time string
 	// this is the format of the string coming from the service
-	if expiresOn, err := time.Parse("01/02/2006 15:04:05 PM +00:00", value.ExpiresOn); err == nil { // the date string specified in the layout param of time.Parse cannot be changed, Golang expects whatever layout to always signify January 2, 2006 at 3:04 PM
+	expiresOn, err := time.Parse("01/02/2006 15:04:05 PM +00:00", value.ExpiresOn)
+	if err == nil { // the date string specified in the layout param of time.Parse cannot be changed, Golang expects whatever layout to always signify January 2, 2006 at 3:04 PM
 		eo := expiresOn.UTC()
 		return &azcore.AccessToken{Token: value.Token, ExpiresOn: eo}, nil
-	} else {
-		return nil, err
 	}
+	return nil, err
 }
 
 func (c *managedIdentityClient) createAuthRequest(ctx context.Context, clientID string, scopes []string) (*azcore.Request, error) {

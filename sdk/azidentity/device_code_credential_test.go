@@ -25,10 +25,11 @@ const (
 
 func TestDeviceCodeCredential_CreateAuthRequestSuccess(t *testing.T) {
 	handler := func(s string) {}
-	cred, err := NewDeviceCodeCredential(tenantID, clientID, handler, nil)
+	credInt, err := NewDeviceCodeCredential(tenantID, clientID, handler, nil)
 	if err != nil {
 		t.Fatalf("Unable to create credential. Received: %v", err)
 	}
+	cred := credInt.(*deviceCodeCredential)
 	req, err := cred.client.createDeviceCodeAuthRequest(context.Background(), cred.tenantID, cred.clientID, deviceCode, []string{deviceCodeScopes})
 	if err != nil {
 		t.Fatalf("Unexpectedly received an error: %v", err)
@@ -67,10 +68,11 @@ func TestDeviceCodeCredential_CreateAuthRequestSuccess(t *testing.T) {
 
 func TestDeviceCodeCredential_CreateAuthRequestEmptyTenant(t *testing.T) {
 	handler := func(s string) {}
-	cred, err := NewDeviceCodeCredential("", clientID, handler, nil)
+	credInt, err := NewDeviceCodeCredential("", clientID, handler, nil)
 	if err != nil {
 		t.Fatalf("Unable to create credential. Received: %v", err)
 	}
+	cred := credInt.(*deviceCodeCredential)
 	req, err := cred.client.createDeviceCodeAuthRequest(context.Background(), cred.tenantID, cred.clientID, deviceCode, []string{deviceCodeScopes})
 	if err != nil {
 		t.Fatalf("Unexpectedly received an error: %v", err)
@@ -112,10 +114,11 @@ func TestDeviceCodeCredential_CreateAuthRequestEmptyTenant(t *testing.T) {
 
 func TestDeviceCodeCredential_RequestNewDeviceCodeEmptyTenant(t *testing.T) {
 	handler := func(s string) {}
-	cred, err := NewDeviceCodeCredential("", clientID, handler, nil)
+	credInt, err := NewDeviceCodeCredential("", clientID, handler, nil)
 	if err != nil {
 		t.Fatalf("Unable to create credential. Received: %v", err)
 	}
+	cred := credInt.(*deviceCodeCredential)
 	req, err := cred.client.createDeviceCodeNumberRequest(context.Background(), cred.tenantID, cred.clientID, []string{deviceCodeScopes})
 	if err != nil {
 		t.Fatalf("Unexpectedly received an error: %v", err)
@@ -160,7 +163,7 @@ func TestDeviceCodeCredential_GetTokenSuccess(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unable to create credential. Received: %v", err)
 	}
-	tk, err := cred.GetToken(context.Background(), azcore.TokenRequestOptions{Scopes: []string{deviceCodeScopes}})
+	tk, err := cred.(*deviceCodeCredential).GetToken(context.Background(), azcore.TokenRequestOptions{Scopes: []string{deviceCodeScopes}})
 	if err != nil {
 		t.Fatalf("Expected an empty error but received: %s", err.Error())
 	}
@@ -178,7 +181,7 @@ func TestDeviceCodeCredential_GetTokenInvalidCredentials(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unable to create credential. Received: %v", err)
 	}
-	_, err = cred.GetToken(context.Background(), azcore.TokenRequestOptions{Scopes: []string{deviceCodeScopes}})
+	_, err = cred.(*deviceCodeCredential).GetToken(context.Background(), azcore.TokenRequestOptions{Scopes: []string{deviceCodeScopes}})
 	if err == nil {
 		t.Fatalf("Expected an error but did not receive one.")
 	}
@@ -196,7 +199,7 @@ func TestDeviceCodeCredential_GetTokenAuthorizationPending(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unable to create credential. Received: %v", err)
 	}
-	_, err = cred.GetToken(context.Background(), azcore.TokenRequestOptions{Scopes: []string{deviceCodeScopes}})
+	_, err = cred.(*deviceCodeCredential).GetToken(context.Background(), azcore.TokenRequestOptions{Scopes: []string{deviceCodeScopes}})
 	if err != nil {
 		t.Fatalf("Expected an empty error but received %v", err)
 	}
@@ -213,7 +216,7 @@ func TestDeviceCodeCredential_GetTokenExpiredToken(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unable to create credential. Received: %v", err)
 	}
-	_, err = cred.GetToken(context.Background(), azcore.TokenRequestOptions{Scopes: []string{deviceCodeScopes}})
+	_, err = cred.(*deviceCodeCredential).GetToken(context.Background(), azcore.TokenRequestOptions{Scopes: []string{deviceCodeScopes}})
 	if err == nil {
 		t.Fatalf("Expected an error but received none")
 	}
@@ -224,10 +227,11 @@ func TestDeviceCodeCredential_GetTokenWithRefreshTokenFailure(t *testing.T) {
 	defer close()
 	srv.AppendResponse(mock.WithBody([]byte(accessTokenRespError)), mock.WithStatusCode(http.StatusUnauthorized))
 	handler := func(string) {}
-	cred, err := NewDeviceCodeCredential(tenantID, clientID, handler, &TokenCredentialOptions{HTTPClient: srv, AuthorityHost: srv.URL()})
+	credInt, err := NewDeviceCodeCredential(tenantID, clientID, handler, &TokenCredentialOptions{HTTPClient: srv, AuthorityHost: srv.URL()})
 	if err != nil {
 		t.Fatalf("Unable to create credential. Received: %v", err)
 	}
+	cred := credInt.(*deviceCodeCredential)
 	cred.refreshToken = "refresh_token"
 	_, err = cred.GetToken(context.Background(), azcore.TokenRequestOptions{Scopes: []string{deviceCodeScopes}})
 	if err == nil {
@@ -244,10 +248,11 @@ func TestDeviceCodeCredential_GetTokenWithRefreshTokenSuccess(t *testing.T) {
 	defer close()
 	srv.AppendResponse(mock.WithBody([]byte(accessTokenRespSuccess)))
 	handler := func(string) {}
-	cred, err := NewDeviceCodeCredential(tenantID, clientID, handler, &TokenCredentialOptions{HTTPClient: srv, AuthorityHost: srv.URL()})
+	credInt, err := NewDeviceCodeCredential(tenantID, clientID, handler, &TokenCredentialOptions{HTTPClient: srv, AuthorityHost: srv.URL()})
 	if err != nil {
 		t.Fatalf("Unable to create credential. Received: %v", err)
 	}
+	cred := credInt.(*deviceCodeCredential)
 	cred.refreshToken = "refresh_token"
 	tk, err := cred.GetToken(context.Background(), azcore.TokenRequestOptions{Scopes: []string{deviceCodeScopes}})
 	if err != nil {

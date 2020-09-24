@@ -26,18 +26,19 @@ type AzureCLICredentialOptions struct {
 	TokenProvider AzureCLITokenProvider
 }
 
-// AzureCLICredential enables authentication to Azure Active Directory using the Azure CLI command "az account get-access-token".
-type AzureCLICredential struct {
+// azureCLICredential enables authentication to Azure Active Directory using the Azure CLI command "az account get-access-token".
+type azureCLICredential struct {
 	tokenProvider AzureCLITokenProvider
 }
 
-// NewAzureCLICredential constructs a new AzureCLICredential with the details needed to authenticate against Azure Active Directory
+// NewAzureCLICredential constructs a credential with the details needed to authenticate against Azure Active Directory
+// through the Azure CLI.
 // options: configure the management of the requests sent to Azure Active Directory.
-func NewAzureCLICredential(options *AzureCLICredentialOptions) (*AzureCLICredential, error) {
+func NewAzureCLICredential(options *AzureCLICredentialOptions) (azcore.Credential, error) {
 	if options == nil {
 		options = &AzureCLICredentialOptions{TokenProvider: defaultTokenProvider()}
 	}
-	return &AzureCLICredential{
+	return &azureCLICredential{
 		tokenProvider: options.TokenProvider,
 	}, nil
 }
@@ -46,7 +47,7 @@ func NewAzureCLICredential(options *AzureCLICredentialOptions) (*AzureCLICredent
 // ctx: Context used to control the request lifetime.
 // opts: TokenRequestOptions contains the list of scopes for which the token will have access.
 // Returns an AccessToken which can be used to authenticate service client calls.
-func (c *AzureCLICredential) GetToken(ctx context.Context, opts azcore.TokenRequestOptions) (*azcore.AccessToken, error) {
+func (c *azureCLICredential) GetToken(ctx context.Context, opts azcore.TokenRequestOptions) (*azcore.AccessToken, error) {
 	// The following code will remove the /.default suffix from the scope passed into the method since AzureCLI expect a resource string instead of a scope string
 	opts.Scopes[0] = strings.TrimSuffix(opts.Scopes[0], defaultSuffix)
 	at, err := c.authenticate(ctx, opts.Scopes[0])
@@ -60,7 +61,7 @@ func (c *AzureCLICredential) GetToken(ctx context.Context, opts azcore.TokenRequ
 
 // AuthenticationPolicy implements the azcore.Credential interface on AzureCLICredential and calls the Bearer Token policy
 // to get the bearer token.
-func (c *AzureCLICredential) AuthenticationPolicy(options azcore.AuthenticationPolicyOptions) azcore.Policy {
+func (c *azureCLICredential) AuthenticationPolicy(options azcore.AuthenticationPolicyOptions) azcore.Policy {
 	return newBearerTokenPolicy(c, options)
 }
 
@@ -70,7 +71,7 @@ const timeoutCLIRequest = 10000 * time.Millisecond
 // an error in case of authentication failure.
 // ctx: The current request context
 // scopes: The scopes for which the token has access
-func (c *AzureCLICredential) authenticate(ctx context.Context, resource string) (*azcore.AccessToken, error) {
+func (c *azureCLICredential) authenticate(ctx context.Context, resource string) (*azcore.AccessToken, error) {
 	output, err := c.tokenProvider(ctx, resource)
 	if err != nil {
 		return nil, err
@@ -129,7 +130,7 @@ func defaultTokenProvider() func(ctx context.Context, resource string) ([]byte, 
 	}
 }
 
-func (c *AzureCLICredential) createAccessToken(tk []byte) (*azcore.AccessToken, error) {
+func (c *azureCLICredential) createAccessToken(tk []byte) (*azcore.AccessToken, error) {
 	t := struct {
 		AccessToken      string `json:"accessToken"`
 		Authority        string `json:"_authority"`

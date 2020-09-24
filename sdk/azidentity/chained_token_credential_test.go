@@ -26,13 +26,13 @@ func TestChainedTokenCredential_InstantiateSuccess(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Could not find appropriate environment credentials")
 	}
-	cred, err := NewChainedTokenCredential(secCred, envCred)
+	cred, err := NewChainedTokenCredential(secCred.(azcore.TokenCredential), envCred.(azcore.TokenCredential))
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	if cred != nil {
-		if len(cred.sources) != 2 {
-			t.Fatalf("Expected 2 sources in the chained token credential, instead found %d", len(cred.sources))
+		if len(cred.(*chainedTokenCredential).sources) != 2 {
+			t.Fatalf("Expected 2 sources in the chained token credential, instead found %d", len(cred.(*chainedTokenCredential).sources))
 		}
 	}
 }
@@ -42,7 +42,7 @@ func TestChainedTokenCredential_InstantiateFailure(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unable to create credential. Received: %v", err)
 	}
-	_, err = NewChainedTokenCredential(secCred, nil)
+	_, err = NewChainedTokenCredential(secCred.(azcore.TokenCredential), nil)
 	if err == nil {
 		t.Fatalf("Expected an error for sending a nil credential in the chain")
 	}
@@ -75,11 +75,11 @@ func TestChainedTokenCredential_GetTokenSuccess(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create environment credential: %v", err)
 	}
-	cred, err := NewChainedTokenCredential(secCred, envCred)
+	cred, err := NewChainedTokenCredential(secCred.(azcore.TokenCredential), envCred.(azcore.TokenCredential))
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	tk, err := cred.GetToken(context.Background(), azcore.TokenRequestOptions{Scopes: []string{scope}})
+	tk, err := cred.(*chainedTokenCredential).GetToken(context.Background(), azcore.TokenRequestOptions{Scopes: []string{scope}})
 	if err != nil {
 		t.Fatalf("Received an error when attempting to get a token but expected none")
 	}
@@ -99,11 +99,11 @@ func TestChainedTokenCredential_GetTokenFail(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unable to create credential. Received: %v", err)
 	}
-	cred, err := NewChainedTokenCredential(secCred)
+	cred, err := NewChainedTokenCredential(secCred.(azcore.TokenCredential))
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	_, err = cred.GetToken(context.Background(), azcore.TokenRequestOptions{Scopes: []string{scope}})
+	_, err = cred.(*chainedTokenCredential).GetToken(context.Background(), azcore.TokenRequestOptions{Scopes: []string{scope}})
 	if err == nil {
 		t.Fatalf("Expected an error but did not receive one")
 	}
@@ -130,11 +130,11 @@ func TestChainedTokenCredential_GetTokenWithUnavailableCredentialInChain(t *test
 	// CredentialUnavailable error from the constructor. In order to test the CredentialUnavailable functionality for
 	// ChainedTokenCredential we have to mock with two valid credentials, but the first will fail since the first response queued
 	// in the test server is a CredentialUnavailable error.
-	cred, err := NewChainedTokenCredential(secCred, secCred)
+	cred, err := NewChainedTokenCredential(secCred.(azcore.TokenCredential), secCred.(azcore.TokenCredential))
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	tk, err := cred.GetToken(context.Background(), azcore.TokenRequestOptions{Scopes: []string{scope}})
+	tk, err := cred.(*chainedTokenCredential).GetToken(context.Background(), azcore.TokenRequestOptions{Scopes: []string{scope}})
 	if err != nil {
 		t.Fatalf("Received an error when attempting to get a token but expected none")
 	}
@@ -159,7 +159,7 @@ func TestBearerPolicy_ChainedTokenCredential(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unable to create credential. Received: %v", err)
 	}
-	chainedCred, err := NewChainedTokenCredential(cred)
+	chainedCred, err := NewChainedTokenCredential(cred.(azcore.TokenCredential))
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
