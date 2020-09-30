@@ -54,15 +54,17 @@ func TestManagedIdentityCredential_GetTokenInVMLiveStorage(t *testing.T) {
 	if msiSecretEnv := os.Getenv(msiSecretEnvironemntVariable); len(msiSecretEnv) != 0 {
 		t.Skip()
 	}
-	msiCred := NewManagedIdentityCredential(clientID, nil)
-	msiEndpoint, err := msiCred.client.getMSIType(context.Background())
-	if err != nil {
-		t.Skip()
-	}
-	if msiEndpoint != msiType(1) {
-		t.Skip()
-	}
-	_, err = msiCred.GetToken(context.Background(), azcore.TokenRequestOptions{Scopes: []string{msiScope}})
+	// msiCred := NewManagedIdentityCredential(clientID, nil)
+	// msiEndpoint, err := msiCred.client.getMSIType(context.Background())
+	// if err != nil {
+	// 	t.Skip()
+	// }
+	// if msiEndpoint != msiType(1) {
+	// 	t.Skip()
+	// }
+	// _, err = msiCred.GetToken(context.Background(), azcore.TokenRequestOptions{Scopes: []string{msiScope}})
+	msiCred := NewClientSecretCredential("72f988bf-86f1-41af-91ab-2d7cd011db47", "5b2bbdae-53cd-4f23-8c71-3c0dcca03418", "UeDL4P7-3FNc.pq~5kg_U3.9.RUb7lvkdo", nil)
+	_, err := msiCred.GetToken(context.Background(), azcore.TokenRequestOptions{Scopes: []string{"https://vault.azure.net/.default"}})
 	if err != nil {
 		fmt.Print("err")
 		fmt.Print(err)
