@@ -89,7 +89,7 @@ func TestManagedIdentityCredential_GetTokenInVMLive(t *testing.T) {
 	if msiEndpoint != msiType(1) {
 		t.Skip()
 	}
-	_, err = msiCred.GetToken(context.Background(), azcore.TokenRequestOptions{Scopes: []string{"https://vault.azure.net"}})
+	_, err = msiCred.GetToken(context.Background(), azcore.TokenRequestOptions{Scopes: []string{"https://vault.azure.net/.default"}})
 	if err != nil {
 		fmt.Println("err")
 		fmt.Println(err)
